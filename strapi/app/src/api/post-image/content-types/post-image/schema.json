@@ -1,0 +1,31 @@
+{
+  "kind": "collectionType",
+  "collectionName": "post_images",
+  "info": {
+    "singularName": "post-image",
+    "pluralName": "post-images",
+    "displayName": "PostImage"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "post": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::post.post",
+      "inversedBy": "post_images"
+    }
+  }
+}

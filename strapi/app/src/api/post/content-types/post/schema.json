@@ -1,0 +1,71 @@
+{
+  "kind": "collectionType",
+  "collectionName": "posts",
+  "info": {
+    "singularName": "post",
+    "pluralName": "posts",
+    "displayName": "Post"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title"
+    },
+    "excerpt": {
+      "type": "text"
+    },
+    "content": {
+      "type": "blocks"
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "category": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "published": {
+      "type": "boolean"
+    },
+    "featured": {
+      "type": "boolean"
+    },
+    "postStatus": {
+      "type": "enumeration",
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ]
+    },
+    "post_images": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::post-image.post-image",
+      "mappedBy": "post"
+    },
+    "post_videos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::post-video.post-video",
+      "mappedBy": "post"
+    }
+  }
+}

@@ -1,0 +1,71 @@
+services:
+
+  strapi-postgres:
+    image: postgres:17
+    container_name: upgraded-blog-strapi-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: strapi
+      POSTGRES_USER: strapi
+      POSTGRES_PASSWORD: ${STRAPI_DB_PASSWORD}
+
+    volumes:
+      - strapi_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U strapi -d strapi"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - strapi-network
+
+
+  strapi:
+    build:
+      context: ./app
+
+    container_name: upgraded-blog-strapi
+    restart: unless-stopped
+
+    ports:
+      - "1337:1337"
+
+    depends_on:
+      strapi-postgres:
+        condition: service_healthy
+
+    environment:
+      HOST: 0.0.0.0
+      PORT: 1337
+
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: strapi-postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: strapi
+      DATABASE_USERNAME: strapi
+      DATABASE_PASSWORD: ${STRAPI_DB_PASSWORD}
+      DATABASE_SSL: "false"
+
+    volumes:
+      - ./app:/opt/app
+      - strapi_node_modules:/opt/app/node_modules
+
+    networks:
+      - strapi-network
+
+
+volumes:
+  strapi_postgres_data:
+  strapi_node_modules:
+
+
+networks:
+  strapi-network:
+    driver: bridge

@@ -1,0 +1,122 @@
+# ==============================
+# Environment / Secrets
+# ==============================
+.env
+.env.*
+!.env.example
+
+# ==============================
+# Node.js
+# ==============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==============================
+# React / Vite
+# ==============================
+dist/
+build/
+.vite/
+
+# ==============================
+# Next.js / Payload
+# ==============================
+.next/
+.turbo/
+out/
+
+# ==============================
+# Expo
+# ==============================
+.expo/
+.expo-shared/
+web-build/
+
+# ==============================
+# Python
+# ==============================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+ENV/
+
+# ==============================
+# Python generated files
+# ==============================
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# ==============================
+# Databases / local database files
+# ==============================
+*.sqlite
+*.sqlite3
+*.db
+
+# ==============================
+# Docker generated/local data
+# ==============================
+docker-data/
+docker-volumes/
+volumes/
+
+# ==============================
+# Uploads / generated media
+# ==============================
+uploads/
+media/
+
+# ==============================
+# IDE
+# ==============================
+.vscode/
+.idea/
+
+# ==============================
+# OS
+# ==============================
+.DS_Store
+Thumbs.db
+
+# ==============================
+# Temporary files
+# ==============================
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# ==============================
+# Certificates / private keys
+# ==============================
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
+
+# ==============================
+# Logs
+# ==============================
+logs/
+*.log
+# Accidental generated files
+README.md~
+payload/-e
+payload/-w
+payload/cross-env
+payload/node:22.22.1-alpine
+payload/payload
+payload/sh
+docker/curl.exe
+docker/psql

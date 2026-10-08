@@ -1,0 +1,284 @@
+services:
+
+  # =========================================================
+  # DIRECTUS POSTGRESQL
+  # =========================================================
+
+  postgres:
+    image: postgres:17
+    container_name: upgraded-blog-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - upgraded-blog-network
+
+
+  # =========================================================
+  # PAYLOAD POSTGRESQL
+  # =========================================================
+
+  payload-postgres:
+    image: postgres:17
+    container_name: upgraded-blog-payload-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: payload
+      POSTGRES_USER: payload
+      POSTGRES_PASSWORD: ${PAYLOAD_DB_PASSWORD}
+
+    volumes:
+      - payload_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U payload -d payload"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - upgraded-blog-network
+
+
+  # =========================================================
+  # PAYLOAD CMS
+  # =========================================================
+
+  payload:
+    build:
+      context: ../payload
+      dockerfile: Dockerfile
+
+    container_name: upgraded-blog-payload
+    restart: unless-stopped
+
+    ports:
+      - "7777:3000"
+
+    # Persistent Payload media storage
+    volumes:
+      - payload_media:/app/media
+
+    depends_on:
+      payload-postgres:
+        condition: service_healthy
+
+    environment:
+      DATABASE_URL: ${PAYLOAD_DATABASE_URL}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET}
+      PAYLOAD_PUBLIC_SERVER_URL: http://localhost:7777
+
+    networks:
+      - upgraded-blog-network
+
+
+  # =========================================================
+  # DIRECTUS
+  # =========================================================
+
+  directus:
+    image: directus/directus:11
+    container_name: upgraded-blog-directus
+    restart: unless-stopped
+
+    ports:
+      - "8055:8055"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      KEY: ${DIRECTUS_KEY}
+      SECRET: ${DIRECTUS_SECRET}
+
+      ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD}
+
+      DB_CLIENT: pg
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+
+      HOST: 0.0.0.0
+      PORT: 8055
+
+      PUBLIC_URL: http://localhost:8055
+
+      CORS_ENABLED: ${CORS_ENABLED}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+
+    volumes:
+      - ./directus/uploads:/directus/uploads
+      - ./directus/extensions:/directus/extensions
+
+    networks:
+      - upgraded-blog-network
+
+
+  # =========================================================
+  # STRAPI POSTGRESQL
+  # =========================================================
+
+  strapi-postgres:
+    image: postgres:17
+    container_name: upgraded-blog-strapi-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: strapi
+      POSTGRES_USER: strapi
+      POSTGRES_PASSWORD: ${STRAPI_DB_PASSWORD}
+
+    volumes:
+      - strapi_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U strapi -d strapi"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - upgraded-blog-network
+
+
+  # =========================================================
+  # STRAPI
+  # =========================================================
+
+  strapi:
+    build:
+      context: ../strapi/app
+      dockerfile: Dockerfile
+
+    container_name: upgraded-blog-strapi
+    restart: unless-stopped
+
+    ports:
+      - "1337:1337"
+
+    depends_on:
+      strapi-postgres:
+        condition: service_healthy
+
+    environment:
+      HOST: 0.0.0.0
+      PORT: 1337
+
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: strapi-postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: strapi
+      DATABASE_USERNAME: strapi
+      DATABASE_PASSWORD: ${STRAPI_DB_PASSWORD}
+      DATABASE_SSL: "false"
+
+    volumes:
+      - ../strapi/app:/opt/app
+      - strapi_node_modules:/opt/app/node_modules
+
+    networks:
+      - upgraded-blog-network
+
+
+  # =========================================================
+  # FLASK API
+  # =========================================================
+
+  flask-api:
+    build:
+      context: ./flask-api
+
+    container_name: upgraded-blog-flask
+    restart: unless-stopped
+
+    ports:
+      - "5000:5000"
+
+    environment:
+      FLASK_ENV: development
+
+    networks:
+      - upgraded-blog-network
+
+
+  # =========================================================
+  # NODE API
+  # =========================================================
+
+  node-api:
+    build:
+      context: ../node-api
+      dockerfile: Dockerfile
+
+    container_name: upgraded-blog-node
+    restart: unless-stopped
+
+    ports:
+      - "3000:3000"
+
+    networks:
+      - upgraded-blog-network
+
+
+# =========================================================
+# DATABASE / STORAGE VOLUMES
+# =========================================================
+
+volumes:
+
+  postgres_data:
+    external: true
+    name: docker_postgres_data
+
+  payload_postgres_data:
+
+  # Persistent Payload uploaded images
+  payload_media:
+
+  strapi_postgres_data:
+    external: true
+    name: strapi_strapi_postgres_data
+
+  strapi_node_modules:
+    external: true
+    name: strapi_strapi_node_modules
+
+
+# =========================================================
+# ONE SHARED DOCKER NETWORK
+# =========================================================
+
+networks:
+
+  upgraded-blog-network:
+    driver: bridge
